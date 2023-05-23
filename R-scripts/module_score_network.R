@@ -7,56 +7,81 @@ library(tidyr)
 library(tibble)
 library(purrr)
 
+# Define the directory path where the files are located
+directory_path <- "~/Graduation/Rstudio"
 
+# Get the file names into one list with a for loop
+file_names <- list.files(directory_path, pattern = "^Genes_.*\\.txt$", full.names = TRUE)
+networks <- list()
+for (i in 1:length(file_names)) {
+  network_name <- gsub("^Genes_(.*)\\.txt$", "\\1", basename(file_names[i]))
+  network_name <- paste0("network", network_name)
+  network_object <- read.table(file_names[i], header = TRUE, sep = "\t")
+  networks[[network_name]] <- network_object
+}
+
+# Separate the dataframes in the networks list into individual dataframes
+list2env(networks, envir = .GlobalEnv)
+
+#read the counts file
 counts <- read.table("normalized_counts.txt", header = T, row.names = 1)
 
-network39<- read.table("Genes_39.txt", header = T, "\t")
-network195 <- read.table("Genes_195.txt", header = T, "\t")
-network177 <- read.table("Genes_177.txt", header = T, "\t")
-network24 <- read.table("Genes_24.txt", header = T, "\t")
-network35 <- read.table("Genes_35.txt", header = T, "\t")
-network74 <- read.table("Genes_74.txt", header = T, "\t")
-network109 <- read.table("Genes_109.txt", header = T, "\t")
-network172 <- read.table("Genes_172.txt", header = T, "\t")
-network147 <- read.table("Genes_147.txt", header = T, "\t")
-
 #making list with all networks
-AORnetworks <- list(N39 = network39$ensembl, N195 = network195$ensembl, N177 = network177$ensembl, 
-                    N24 = network24$ensembl, N35 = network35$ensembl, N74 = network74$ensembl, 
-                    N109 = network109$ensembl, N172 = network172$ensembl, N147 = network147$ensembl)
+network_names <- c("39", "195", "177", "24", "35", "74", "109", "172", "147")
+AORnetworks <- list()
+for (name in network_names) {
+  network_object <- get(paste0("network", name))
+  AORnetworks[[name]] <- network_object$ensembl
+}
 
+#run module score
 module_score <- ScoreSignatures_UCell(counts, features = AORnetworks)
 module_score <- as.data.frame(module_score)
+
+#add plaque types
 cluster <- read.table("Seurat_clusters.txt", header = T)
 module_score <- module_score %>% rownames_to_column(var = "study_number")
 module_score_cluster <- dplyr::full_join(cluster, module_score, by = "study_number")
 
+#write to table
 write.table(module_score_cluster, file = "module_score_networks.csv", sep = "\t")
 
-#which genes are present in network but not present in counts
+#all genes in count files
 ensembl <- row.names(counts)
 ensembl <- as.data.frame(ensembl)
 
-no_overlap <- map(list(network39 = network39, network195 = network195, network177 = network177, 
-                       network24 = network24, network35 = network35, network74 = network74, network109 = network109, 
-                       network172 = network172, network147 = network147), 
-                  ~ anti_join(.x, ensembl, by = "ensembl") %>% select(ensembl))
+#search for genes with no overlap in network
+network_names <- c("network39", "network195", "network177", "network24", "network35", "network74", "network109", "network172", "network147")
+no_overlap_counts <- list()
+for (name in network_names) {
+  network_object <- get(name)
+  no_overlap <- anti_join(network_object, ensembl, by = "ensembl") %>% select(ensembl)
+  no_overlap_counts[[name]] <- no_overlap
+}
 
-overlap <- map(list(network39 = network39, network195 = network195, network177 = network177, 
-                       network24 = network24, network35 = network35, network74 = network74, network109 = network109, 
-                       network172 = network172, network147 = network147), 
-                  ~ semi_join(.x, ensembl, by = "ensembl") %>% select(ensembl))
+# Initialize empty vectors to store the information
+#network_names <- c("network39", "network195", "network177", "network24", "network35", "network74", "network109", "network172", "network147")
+total_genes <- vector("numeric", length(network_names))
+no_overlap_genes <- vector("numeric", length(network_names))
+percentage_no_overlap <- vector("numeric", length(network_names))
+
+# for loop that uses different vectors for result table
+for (i in seq_along(network_names)) {
+  name <- network_names[i]
+  network_object <- get(name)
+  no_overlap <- no_overlap_counts[[name]] #
+  total_genes[i] <- nrow(network_object) #total genes
+  no_overlap_genes[i] <- nrow(no_overlap) # no overlap genes
+  percentage_no_overlap[i] <- (no_overlap_genes[i] / total_genes[i]) * 100 #percentage no overlap
+}
+
+# Create the table
+result_table <- data.frame(Network = network_names,
+                           Total_Genes = total_genes,
+                           No_Overlap_Genes = no_overlap_genes,
+                           Percentage_No_Overlap = percentage_no_overlap)
 
 
-#which genes are not present in network but are present in counts
 
-no_overlap_counts <- map(list(network39 = network39, network195 = network195, network177 = network177, 
-                       network24 = network24, network35 = network35, network74 = network74, network109 = network109, 
-                       network172 = network172, network147 = network147), 
-                  ~ anti_join(ensembl, .x, by = "ensembl") %>% select(ensembl))
 
-overlap_counts <- map(list(network39 = network39, network195 = network195, network177 = network177, 
-                       network24 = network24, network35 = network35, network74 = network74, network109 = network109, 
-                       network172 = network172, network147 = network147), 
-                  ~ semi_join(ensembl, .x, by = "ensembl") %>% select(ensembl))
 
