@@ -24,6 +24,7 @@ if (question == "plaque combined"){
   }
 }else {
   module_score_feature_ANOVA$Feature <- as.character(module_score_feature_ANOVA$Feature) #sets feature as character
+  module_score_feature_ANOVA <- arrange(module_score_feature_ANOVA, Feature)
   module_score_feature_ANOVA$Feature <- factor(module_score_feature_ANOVA$Feature, levels = unique(module_score_feature_ANOVA$Feature)) #set feature to factor levels
   network <- colnames(module_score_feature_ANOVA[, -1]) #removes first column
   networknames <- gsub('[^0-9]+', "", network)
@@ -38,15 +39,15 @@ if (question == "plaque combined"){
 
 #Here two functions are give, That are almost the same, 1 is based on comparing plaque types with another variable(feature) and the other one on 1 variable(feature). 
 
-#function based on two variables, cluster and feature
-runAnovaTukey_2 <- function(input_data, file_prefix) {
-    Anova_Tukey <- paste0(file_prefix, "_Anova_Tukey_IN_BETWEEN_RESULTS_ALL_plaque_symptoms_inclusion.txt") #in between result that gives ANOVA and Tukey
-    Tukey <- paste0(file_prefix, "_Tukey_IN_BETWEEN_RESULTS_ALL_plaque_symptoms_inclusion.txt") #in between result that only gives Tukey
-    Anova_pvalue_file <- paste0(file_prefix, "_Anova_pvalue_IN_BETWEEN_RESULTS_ALL_plaque_symptoms_inclusion.txt") #in between result that gives p value from ANOVA
-    pvalue_Anova <- paste0(file_prefix, "_pvalue_Anova_ALL_plaque_symptoms_inclusion.txt")  #table with p values Anova
-    pvalue_Anova_0.05 <- paste0(file_prefix, "_pvalue_Anova_0.05_ALL_plaque_symptoms_inclusion.txt") #table with p value <0.05 Anova
-    Tukey_comparison <- paste0(file_prefix, "_Tukey_comparison_ALL_plaque_symptoms_inclusion.txt") #table with values Tukey
-    Tukey_comparison_0.05 <- paste0(file_prefix, "_Tukey_comparison_0.05_ALL_plaque_symptoms_inclusion.txt") #table with values Tukey < 0.05
+#function based on two variables, cluster and feature, RENAME FILES WHEN USING 2 VARIABLES
+runAnovaTukey_1 <- function(input_data, file_prefix) {
+    Anova_Tukey <- paste0(file_prefix, "_Anova_Tukey_IN_BETWEEN_RESULTS_ALL_plaque_sex.txt") #in between result that gives ANOVA and Tukey
+    Tukey <- paste0(file_prefix, "_Tukey_IN_BETWEEN_RESULTS_ALL_plaque_sex.txt") #in between result that only gives Tukey
+    Anova_pvalue_file <- paste0(file_prefix, "_Anova_pvalue_IN_BETWEEN_RESULTS_ALL_plaque_sex.txt") #in between result that gives p value from ANOVA
+    pvalue_Anova <- paste0(file_prefix, "_pvalue_Anova_ALL_plaque_sex.txt")  #table with p values Anova
+    pvalue_Anova_0.05 <- paste0(file_prefix, "_pvalue_Anova_0.05_ALL_plaque_sex.txt") #table with p value <0.05 Anova
+    Tukey_comparison <- paste0(file_prefix, "_Tukey_comparison_ALL_plaque_sex.txt") #table with values Tukey
+    Tukey_comparison_0.05 <- paste0(file_prefix, "_Tukey_comparison_0.05_ALL_plaque_sex.txt") #table with values Tukey < 0.05
     
     #all results
     sink(Anova_Tukey)
@@ -158,14 +159,14 @@ runAnovaTukey_2 <- function(input_data, file_prefix) {
 #function based on only 1 feature 
   
 #CHANGE THESE NAMES BASED ON THE QUESTION, ONLY CHANGE THE PART BETWEEN THE "" 
-runAnovaTukey_1 <- function(input_data, file_prefix) {
-  Anova_Tukey <- paste0(file_prefix, "_Anova_Tukey_IN_BETWEEN_RESULTS_ALL_plaque_sex.txt") #in between result that gives ANOVA and Tukey
-  Tukey <- paste0(file_prefix, "_Tukey_IN_BETWEEN_RESULTS_ALL_plaque_sex.txt") #in between result that only gives Tukey
-  Anova_pvalue_file <- paste0(file_prefix, "_Anova_pvalue_IN_BETWEEN_RESULTS_ALL_plaque_sex.txt") #in between result that gives p value from ANOVA
-  pvalue_Anova <- paste0(file_prefix, "_pvalue_Anova_ALL_plaque_sex.txt")  #table with p values Anova
-  pvalue_Anova_0.05 <- paste0(file_prefix, "_pvalue_Anova_0.05_ALL_plaque_sex.txt") #table with p value <0.05 Anova
-  Tukey_comparison <- paste0(file_prefix, "_Tukey_comparison_ALL_plaque_sex.txt") #table with values Tukey
-  Tukey_comparison_0.05 <- paste0(file_prefix, "_Tukey_comparison_0.05_ALL_plaque_sex.txt") #table with values Tukey < 0.05
+runAnovaTukey_2 <- function(input_data, file_prefix) {
+  Anova_Tukey <- paste0(file_prefix, "_Anova_Tukey_IN_BETWEEN_RESULTS_All_plaque.txt") #in between result that gives ANOVA and Tukey
+  Tukey <- paste0(file_prefix, "_Tukey_IN_BETWEEN_RESULTS_All_plaque.txt") #in between result that only gives Tukey
+  Anova_pvalue_file <- paste0(file_prefix, "_Anova_pvalue_IN_BETWEEN_RESULTS_All_plaque.txt") #in between result that gives p value from ANOVA
+  pvalue_Anova <- paste0(file_prefix, "_pvalue_Anova_All_plaque.txt")  #table with p values Anova
+  pvalue_Anova_0.05 <- paste0(file_prefix, "_pvalue_Anova_0.05_All_plaque.txt") #table with p value <0.05 Anova
+  Tukey_comparison <- paste0(file_prefix, "_Tukey_comparison_All_plaque.txt") #table with values Tukey
+  Tukey_comparison_0.05 <- paste0(file_prefix, "_Tukey_comparison_0.05_All_plaque.txt") #table with values Tukey < 0.05
   
   #saves all results from ANOVA including Tukey
   sink(Anova_Tukey)
@@ -254,11 +255,11 @@ runAnovaTukey_1 <- function(input_data, file_prefix) {
 
   
 if (question == "plaque combined"){ 
-  runAnovaTukey_2(average_correlation_total, "Connectivity")
-  runAnovaTukey_2(module_score_list, "module_score") 
-} else { 
   runAnovaTukey_1(average_correlation_total, "Connectivity")
   runAnovaTukey_1(module_score_list, "module_score") 
+} else { 
+  runAnovaTukey_2(average_correlation_total, "Connectivity")
+  runAnovaTukey_2(module_score_list, "module_score") 
 }
 
 
